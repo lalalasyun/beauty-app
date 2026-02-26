@@ -1,0 +1,50 @@
+name = "beauty-app"
+compatibility_date = "2025-01-01"
+pages_build_output_dir = "dist"
+
+# ============================================================
+# D1 Database binding
+# ============================================================
+# ローカル開発時は Miniflare が自動的にローカルDBを使用
+[[d1_databases]]
+binding = "DB"
+database_name = "beauty-app-db"
+database_id = "placeholder-replace-after-creation"
+
+# ============================================================
+# R2 Storage binding
+# ============================================================
+# ローカル開発時は Miniflare が自動的にローカルストレージを使用
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "beauty-app-photos"
+
+# ============================================================
+# Staging environment
+# ============================================================
+[env.staging]
+name = "beauty-app-staging"
+
+[[env.staging.d1_databases]]
+binding = "DB"
+database_name = "beauty-app-stg-db"
+database_id = "placeholder-replace-after-creation"
+
+[[env.staging.r2_buckets]]
+binding = "BUCKET"
+bucket_name = "beauty-app-stg-photos"
+
+# ============================================================
+# Production environment
+# ============================================================
+[env.production]
+name = "beauty-app-production"
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "beauty-app-prod-db"
+database_id = "placeholder-replace-after-creation"
+
+[[env.production.r2_buckets]]
+binding = "BUCKET"
+bucket_name = "beauty-app-prod-photos"
