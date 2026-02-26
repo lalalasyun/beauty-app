@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:server": "wrangler pages dev dist --d1=DB --r2=BUCKET --port 8788",
+    "dev:server": "wrangler pages dev dist --port 8788",
     "dev:full": "npm run build && npm run dev:server",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
