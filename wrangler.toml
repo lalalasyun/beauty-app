@@ -9,7 +9,7 @@ pages_build_output_dir = "dist"
 [[d1_databases]]
 binding = "DB"
 database_name = "beauty-app-db"
-database_id = "placeholder-replace-after-creation"
+database_id = "f2836e4f-ba61-4895-8e5f-d4402cacd8ad"
 
 # ============================================================
 # R2 Storage binding (production)
@@ -22,15 +22,15 @@ bucket_name = "beauty-app-photos"
 # ============================================================
 # Preview environment (develop ブランチ / PR プレビュー)
 # ============================================================
-# Cloudflare Pages は "preview" と "production" のみサポート
-[env.preview]
-name = "beauty-app-preview"
-
-[[env.preview.d1_databases]]
-binding = "DB"
-database_name = "beauty-app-preview-db"
-database_id = "placeholder-replace-after-creation"
-
-[[env.preview.r2_buckets]]
-binding = "BUCKET"
-bucket_name = "beauty-app-preview-photos"
+# TODO: preview用D1作成後にコメント解除し、database_idを設定する
+# [env.preview]
+# name = "beauty-app-preview"
+#
+# [[env.preview.d1_databases]]
+# binding = "DB"
+# database_name = "beauty-app-preview-db"
+# database_id = "placeholder-replace-after-creation"
+#
+# [[env.preview.r2_buckets]]
+# binding = "BUCKET"
+# bucket_name = "beauty-app-preview-photos"
