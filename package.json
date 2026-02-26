@@ -14,10 +14,10 @@
     "test:watch": "vitest",
     "test:api": "vitest run --config vitest.api.config.ts",
     "db:migrate:local": "wrangler d1 execute beauty-app-db --local --file=schema.sql",
-    "db:migrate:staging": "wrangler d1 execute beauty-app-stg-db --file=schema.sql --env staging",
-    "db:migrate:production": "wrangler d1 execute beauty-app-prod-db --file=schema.sql --env production",
-    "deploy:staging": "wrangler pages deploy dist --project-name beauty-app-staging",
-    "deploy:production": "wrangler pages deploy dist --project-name beauty-app"
+    "db:migrate:preview": "wrangler d1 execute beauty-app-preview-db --file=schema.sql --env preview",
+    "db:migrate:production": "wrangler d1 execute beauty-app-db --file=schema.sql",
+    "deploy:preview": "wrangler pages deploy dist --project-name beauty-app --branch develop",
+    "deploy:production": "wrangler pages deploy dist --project-name beauty-app --branch main"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",
