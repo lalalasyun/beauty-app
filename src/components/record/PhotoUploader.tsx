@@ -1,6 +1,5 @@
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { useMemo, useRef, useCallback } from 'react'
 import { Camera, ImagePlus, X } from 'lucide-react'
-import { createPreviewUrl, revokePreviewUrl } from '@/lib/image'
 import { cn } from '@/lib/utils'
 
 interface PhotoUploaderProps {
@@ -18,16 +17,11 @@ export function PhotoUploader({
   existingUrl,
   className,
 }: PhotoUploaderProps) {
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
-    if (file) {
-      const url = createPreviewUrl(file)
-      setPreviewUrl(url)
-      return () => revokePreviewUrl(url)
-    }
-    setPreviewUrl(null)
+  const previewUrl = useMemo(() => {
+    if (!file) return null
+    return URL.createObjectURL(file)
   }, [file])
 
   const displayUrl = previewUrl || existingUrl || null
@@ -44,7 +38,6 @@ export function PhotoUploader({
 
   const handleRemove = useCallback(() => {
     onChange(null)
-    setPreviewUrl(null)
   }, [onChange])
 
   return (

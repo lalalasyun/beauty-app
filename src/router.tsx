@@ -1,20 +1,11 @@
-import { createBrowserRouter, Outlet } from 'react-router-dom'
-import { BottomNav } from '@/components/layout'
+import { createBrowserRouter } from 'react-router-dom'
+import { RootLayout } from '@/components/layout/RootLayout'
 import { HomePage } from '@/pages/HomePage'
 import { CustomerListPage } from '@/pages/customers/CustomerListPage'
 import { CustomerNewPage } from '@/pages/customers/CustomerNewPage'
 import { CustomerDetailPage } from '@/pages/customers/CustomerDetailPage'
 import { RecordNewPage } from '@/pages/records/RecordNewPage'
 import { RecordDetailPage } from '@/pages/records/RecordDetailPage'
-
-function RootLayout() {
-  return (
-    <div className="min-h-screen bg-background font-sans antialiased">
-      <Outlet />
-      <BottomNav />
-    </div>
-  )
-}
 
 export const router = createBrowserRouter([
   {

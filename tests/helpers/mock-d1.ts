@@ -45,26 +45,24 @@ export class MockD1Database {
     this.lastSql = sql
     this.lastBindings = []
 
-    const db = this
-
     const stmt: MockStatement = {
-      bind(...values: unknown[]) {
-        db.lastBindings = values
+      bind: (...values: unknown[]) => {
+        this.lastBindings = values
         return stmt
       },
 
-      async run() {
-        db.executeSql(db.lastSql, db.lastBindings)
+      run: async () => {
+        this.executeSql(this.lastSql, this.lastBindings)
         return { success: true, meta: {} }
       },
 
-      async all() {
-        const results = db.executeSqlQuery(db.lastSql, db.lastBindings)
+      all: async () => {
+        const results = this.executeSqlQuery(this.lastSql, this.lastBindings)
         return { results, success: true }
       },
 
-      async first() {
-        const results = db.executeSqlQuery(db.lastSql, db.lastBindings)
+      first: async () => {
+        const results = this.executeSqlQuery(this.lastSql, this.lastBindings)
         return results[0] || null
       },
     }
