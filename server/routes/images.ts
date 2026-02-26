@@ -10,12 +10,19 @@ export const imagesRoute = new Hono<HonoEnv>()
 // FormData: record_id, type (before|after), file
 imagesRoute.post('/upload', async (c) => {
   try {
-    const formData = await c.req.formData()
-    const recordId = formData.get('record_id') as string
-    const type = formData.get('type') as string // 'before' | 'after'
-    const file = formData.get('file') as File
+    const body = await c.req.parseBody()
+    const recordId = body['record_id']
+    const type = body['type']
+    const file = body['file']
 
-    if (!recordId || !type || !file) {
+    if (
+      typeof recordId !== 'string' ||
+      typeof type !== 'string' ||
+      !recordId ||
+      !type ||
+      !file ||
+      typeof file === 'string'
+    ) {
       return c.json(
         { success: false, error: 'record_id, type, and file are required' },
         400

@@ -1,8 +1,13 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
-import type { Env } from '../src/types/index.ts'
 import { authMiddleware } from './middleware/auth.ts'
+
+// Cloudflare Bindings (server-side only)
+export interface Env {
+  DB: D1Database
+  BUCKET: R2Bucket
+}
 import { customersRoute } from './routes/customers.ts'
 import { recordsRoute } from './routes/records.ts'
 import { imagesRoute } from './routes/images.ts'

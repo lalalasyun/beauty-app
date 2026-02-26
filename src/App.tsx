@@ -1,9 +1,8 @@
+import { RouterProvider } from 'react-router-dom'
+import { router } from '@/router'
+
 function App() {
-  return (
-    <div className="min-h-screen bg-background">
-      <p className="p-8 text-foreground font-sans">Beauty App - Setup Complete</p>
-    </div>
-  )
+  return <RouterProvider router={router} />
 }
 
 export default App
