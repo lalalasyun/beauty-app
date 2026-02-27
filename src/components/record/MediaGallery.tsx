@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Film, MoreVertical } from 'lucide-react'
+import { Film, MoreVertical, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getMediaUrl } from '@/lib/api'
 import type { RecordMedia } from '@/types'
@@ -11,6 +11,7 @@ interface MediaGalleryProps {
   beforeMediaId?: string
   afterMediaId?: string
   onSetRepresentative?: (field: 'before_media_id' | 'after_media_id', mediaId: string) => void
+  onDelete?: (mediaId: string) => void
   className?: string
 }
 
@@ -19,6 +20,7 @@ export function MediaGallery({
   beforeMediaId,
   afterMediaId,
   onSetRepresentative,
+  onDelete,
   className,
 }: MediaGalleryProps) {
   const [lightbox, setLightbox] = useState<{ src: string; alt: string } | null>(null)
@@ -71,12 +73,12 @@ export function MediaGallery({
           const isPhoto = item.media_type === 'photo'
 
           return (
-            <div key={item.id} className="relative aspect-square overflow-hidden rounded-lg bg-muted">
+            <div key={item.id} className="relative aspect-square rounded-lg">
               {/* Media content */}
               <button
                 type="button"
                 onClick={() => handleMediaClick(item)}
-                className="h-full w-full"
+                className="h-full w-full overflow-hidden rounded-lg bg-muted"
               >
                 {isPhoto ? (
                   <img
@@ -100,6 +102,21 @@ export function MediaGallery({
                   </>
                 )}
               </button>
+
+              {/* Delete button */}
+              {onDelete && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onDelete(item.id)
+                  }}
+                  className="absolute -right-1.5 -top-1.5 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black/80"
+                  aria-label="削除"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              )}
 
               {/* Representative badges */}
               {isBefore && (
@@ -134,7 +151,7 @@ export function MediaGallery({
                   {menuId === item.id && (
                     <div
                       ref={menuRef}
-                      className="absolute bottom-8 right-0 z-10 min-w-[140px] rounded-lg border bg-background py-1 shadow-lg"
+                      className="absolute bottom-8 right-0 z-20 min-w-[140px] rounded-lg border bg-background py-1 shadow-lg"
                     >
                       {isBefore ? (
                         <button

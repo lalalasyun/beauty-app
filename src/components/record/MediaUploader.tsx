@@ -57,7 +57,7 @@ export function MediaUploader({
             写真 {photos.length}/{maxPhotos}
           </span>
         </div>
-        <div className="flex gap-2 overflow-x-auto pb-1">
+        <div className="flex gap-2 overflow-x-auto pb-1 pt-2 pr-2">
           {photos.map((item) => (
             <div key={item.id} className="relative shrink-0">
               <img
@@ -107,7 +107,7 @@ export function MediaUploader({
             動画 {videos.length}/{maxVideos}
           </span>
         </div>
-        <div className="flex gap-2 overflow-x-auto pb-1">
+        <div className="flex gap-2 overflow-x-auto pb-1 pt-2 pr-2">
           {videos.map((item) => (
             <div key={item.id} className="relative shrink-0">
               <video

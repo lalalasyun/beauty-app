@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { Trash2, Camera } from 'lucide-react'
+import { useRef } from 'react'
+import { Trash2, Camera, ImagePlus, Film } from 'lucide-react'
 import { Header, PageContainer } from '@/components/layout'
 import { BeforeAfterView, MediaGallery } from '@/components/record'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -7,6 +8,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Button } from '@/components/ui/button'
 import { useTreatmentRecord } from '@/hooks/useTreatmentRecords'
 import { useRecordMedia } from '@/hooks/useRecordMedia'
+import { useMediaUpload } from '@/hooks/useMediaUpload'
 import { getImageUrl, getMediaUrl } from '@/lib/api'
 import { formatDate } from '@/lib/utils'
 import * as api from '@/lib/api'
@@ -16,8 +18,11 @@ export function RecordDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { record, loading, reload: reloadRecord } = useTreatmentRecord(id)
-  const { media } = useRecordMedia(id)
+  const { media, reload: reloadMedia } = useRecordMedia(id)
+  const { uploading, uploadPhoto, uploadVideo } = useMediaUpload()
   const [deleting, setDeleting] = useState(false)
+  const photoInputRef = useRef<HTMLInputElement>(null)
+  const videoInputRef = useRef<HTMLInputElement>(null)
 
   const handleDelete = async () => {
     if (!id || !record) return
@@ -42,6 +47,50 @@ export function RecordDetailPage() {
       }
     },
     [id, reloadRecord]
+  )
+
+  const handleUploadPhoto = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0]
+      if (!file || !id) return
+      e.target.value = ''
+      try {
+        await uploadPhoto(id, file)
+        reloadMedia()
+      } catch {
+        // エラーハンドリング（将来Toast追加）
+      }
+    },
+    [id, uploadPhoto, reloadMedia]
+  )
+
+  const handleUploadVideo = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0]
+      if (!file || !id) return
+      e.target.value = ''
+      try {
+        await uploadVideo(id, file)
+        reloadMedia()
+      } catch {
+        // エラーハンドリング（将来Toast追加）
+      }
+    },
+    [id, uploadVideo, reloadMedia]
+  )
+
+  const handleDeleteMedia = useCallback(
+    async (mediaId: string) => {
+      if (!confirm('このメディアを削除しますか？')) return
+      try {
+        await api.deleteMedia(mediaId)
+        reloadMedia()
+        reloadRecord()
+      } catch {
+        // エラーハンドリング（将来Toast追加）
+      }
+    },
+    [reloadMedia, reloadRecord]
   )
 
   if (loading) {
@@ -115,9 +164,48 @@ export function RecordDetailPage() {
             beforeMediaId={record.before_media_id}
             afterMediaId={record.after_media_id}
             onSetRepresentative={handleSetRepresentative}
+            onDelete={handleDeleteMedia}
             className="mt-4"
           />
         )}
+
+        {/* Upload buttons */}
+        <div className="mt-3 flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => photoInputRef.current?.click()}
+            disabled={uploading}
+            className="gap-1.5 text-xs"
+          >
+            <ImagePlus className="h-3.5 w-3.5" />
+            写真追加
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => videoInputRef.current?.click()}
+            disabled={uploading}
+            className="gap-1.5 text-xs"
+          >
+            <Film className="h-3.5 w-3.5" />
+            動画追加
+          </Button>
+          <input
+            ref={photoInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleUploadPhoto}
+            className="hidden"
+          />
+          <input
+            ref={videoInputRef}
+            type="file"
+            accept="video/*"
+            onChange={handleUploadVideo}
+            className="hidden"
+          />
+        </div>
 
         {/* Meta */}
         <div className="mt-5 space-y-4 rounded-2xl bg-muted/30 px-5 py-4">
