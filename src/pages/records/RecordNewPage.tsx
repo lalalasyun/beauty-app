@@ -23,15 +23,28 @@ export function RecordNewPage() {
         memo: data.memo,
       })
 
-      // 2. メディアを並行アップロード
-      const uploads: Promise<unknown>[] = []
-      for (const photo of data.photos) {
-        uploads.push(uploadPhoto(record.id, photo.file))
+      // 2. 写真アップロード（local ID → server ID を追跡）
+      const photoResults = await Promise.all(
+        data.photos.map(async (photo) => {
+          const media = await uploadPhoto(record.id, photo.file)
+          return { localId: photo.id, serverId: media.id }
+        })
+      )
+
+      // 3. 動画を並行アップロード
+      await Promise.all(
+        data.videos.map((video) => uploadVideo(record.id, video.file))
+      )
+
+      // 4. Before/After 代表画像を設定
+      if (data.beforePhotoId) {
+        const match = photoResults.find((r) => r.localId === data.beforePhotoId)
+        if (match) await api.setRepresentative(record.id, 'before_media_id', match.serverId)
       }
-      for (const video of data.videos) {
-        uploads.push(uploadVideo(record.id, video.file))
+      if (data.afterPhotoId) {
+        const match = photoResults.find((r) => r.localId === data.afterPhotoId)
+        if (match) await api.setRepresentative(record.id, 'after_media_id', match.serverId)
       }
-      await Promise.all(uploads)
 
       navigate(`/customers/${customerId}`, { replace: true })
     } catch {

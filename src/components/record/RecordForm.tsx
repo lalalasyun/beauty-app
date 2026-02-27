@@ -10,6 +10,8 @@ export interface RecordFormData {
   memo: string
   photos: MediaFile[]
   videos: MediaFile[]
+  beforePhotoId: string | null
+  afterPhotoId: string | null
 }
 
 interface RecordFormProps {
@@ -38,6 +40,8 @@ export function RecordForm({
   const [memo, setMemo] = useState(initialMemo)
   const [photos, setPhotos] = useState<MediaFile[]>([])
   const [videos, setVideos] = useState<MediaFile[]>([])
+  const [beforePhotoId, setBeforePhotoId] = useState<string | null>(null)
+  const [afterPhotoId, setAfterPhotoId] = useState<string | null>(null)
 
   const handleAddPhoto = useCallback((file: File) => {
     const item: MediaFile = {
@@ -70,11 +74,18 @@ export function RecordForm({
       if (item) URL.revokeObjectURL(item.previewUrl)
       return prev.filter((v) => v.id !== id)
     })
+    setBeforePhotoId((prev) => (prev === id ? null : prev))
+    setAfterPhotoId((prev) => (prev === id ? null : prev))
+  }, [])
+
+  const handleSetRepresentative = useCallback((field: 'before' | 'after', photoId: string) => {
+    if (field === 'before') setBeforePhotoId((prev) => (prev === photoId ? null : photoId))
+    else setAfterPhotoId((prev) => (prev === photoId ? null : photoId))
   }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    await onSubmit({ treatment_date: treatmentDate, memo, photos, videos })
+    await onSubmit({ treatment_date: treatmentDate, memo, photos, videos, beforePhotoId, afterPhotoId })
   }
 
   return (
@@ -91,6 +102,9 @@ export function RecordForm({
           onAddPhoto={handleAddPhoto}
           onAddVideo={handleAddVideo}
           onRemove={handleRemove}
+          beforePhotoId={beforePhotoId}
+          afterPhotoId={afterPhotoId}
+          onSetRepresentative={handleSetRepresentative}
         />
       </div>
 
