@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { useRef } from 'react'
+import { useRef, useEffect } from 'react'
 import { Trash2, Camera, ImagePlus, Film } from 'lucide-react'
 import { Header, PageContainer } from '@/components/layout'
 import { BeforeAfterView, MediaGallery } from '@/components/record'
@@ -10,7 +10,7 @@ import { useTreatmentRecord } from '@/hooks/useTreatmentRecords'
 import { useRecordMedia } from '@/hooks/useRecordMedia'
 import { useMediaUpload } from '@/hooks/useMediaUpload'
 import { getImageUrl, getMediaUrl } from '@/lib/api'
-import { formatDate } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import * as api from '@/lib/api'
 import { useState, useCallback } from 'react'
 
@@ -21,8 +21,33 @@ export function RecordDetailPage() {
   const { media, reload: reloadMedia } = useRecordMedia(id)
   const { uploading, uploadPhoto, uploadVideo } = useMediaUpload()
   const [deleting, setDeleting] = useState(false)
+  const [treatmentDate, setTreatmentDate] = useState('')
+  const [memo, setMemo] = useState('')
+  const [saving, setSaving] = useState(false)
   const photoInputRef = useRef<HTMLInputElement>(null)
   const videoInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (record) {
+      setTreatmentDate(record.treatment_date)
+      setMemo(record.memo ?? '')
+    }
+  }, [record])
+
+  const hasChanges =
+    !!record &&
+    (treatmentDate !== record.treatment_date || memo !== (record.memo ?? ''))
+
+  const handleSave = async () => {
+    if (!id || !hasChanges) return
+    setSaving(true)
+    try {
+      await api.updateRecord(id, { treatment_date: treatmentDate, memo })
+      reloadRecord()
+    } finally {
+      setSaving(false)
+    }
+  }
 
   const handleDelete = async () => {
     if (!id || !record) return
@@ -207,26 +232,51 @@ export function RecordDetailPage() {
           />
         </div>
 
-        {/* Meta */}
-        <div className="mt-5 space-y-4 rounded-2xl bg-muted/30 px-5 py-4">
+        {/* Meta (editable) */}
+        <div className="mt-5 space-y-4">
           <div>
-            <span className="text-[12px] font-medium text-muted-foreground">
+            <label className="mb-1.5 block text-[13px] font-medium text-muted-foreground">
               施術日
-            </span>
-            <p className="mt-0.5 text-[15px] font-medium">
-              {formatDate(record.treatment_date)}
-            </p>
+            </label>
+            <input
+              type="date"
+              value={treatmentDate}
+              onChange={(e) => setTreatmentDate(e.target.value)}
+              className={cn(
+                'h-13 w-full rounded-xl border bg-background px-4',
+                'text-[16px]',
+                'outline-none transition-all',
+                'focus:ring-2 focus:ring-foreground/10 focus:border-foreground/20'
+              )}
+            />
           </div>
 
-          {record.memo && (
-            <div>
-              <span className="text-[12px] font-medium text-muted-foreground">
-                メモ
-              </span>
-              <p className="mt-0.5 whitespace-pre-wrap text-[14px] leading-relaxed text-foreground/80">
-                {record.memo}
-              </p>
-            </div>
+          <div>
+            <label className="mb-1.5 block text-[13px] font-medium text-muted-foreground">
+              メモ（薬剤配合・施術内容など）
+            </label>
+            <textarea
+              value={memo}
+              onChange={(e) => setMemo(e.target.value)}
+              rows={4}
+              className={cn(
+                'w-full rounded-xl border bg-background px-4 py-3',
+                'text-[15px] leading-relaxed placeholder:text-muted-foreground/40',
+                'outline-none transition-all resize-none',
+                'focus:ring-2 focus:ring-foreground/10 focus:border-foreground/20'
+              )}
+              placeholder="施術内容や薬剤配合などを記録..."
+            />
+          </div>
+
+          {hasChanges && (
+            <Button
+              onClick={handleSave}
+              disabled={saving}
+              className="h-13 w-full rounded-xl text-[15px] font-semibold"
+            >
+              {saving ? '保存中...' : '保存'}
+            </Button>
           )}
         </div>
       </PageContainer>
