@@ -30,7 +30,7 @@ export function BeforeAfterView({
           ) : (
             <div className="flex aspect-[3/4] items-center justify-center">
               <span className="text-[13px] text-muted-foreground/40">
-                写真なし
+                ギャラリーから選択
               </span>
             </div>
           )}
@@ -53,7 +53,7 @@ export function BeforeAfterView({
           ) : (
             <div className="flex aspect-[3/4] items-center justify-center">
               <span className="text-[13px] text-muted-foreground/40">
-                写真なし
+                ギャラリーから選択
               </span>
             </div>
           )}

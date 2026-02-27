@@ -1,21 +1,19 @@
-import { useMemo, useRef } from 'react'
+import { useRef } from 'react'
 import { ImagePlus, Film, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export interface MediaFile {
   id: string
   file: File
-  category: 'before' | 'after'
   mediaType: 'photo' | 'video'
   previewUrl: string
 }
 
 interface MediaUploaderProps {
-  category: 'before' | 'after'
   photos: MediaFile[]
   videos: MediaFile[]
-  onAddPhoto: (category: 'before' | 'after', file: File) => void
-  onAddVideo: (category: 'before' | 'after', file: File) => void
+  onAddPhoto: (file: File) => void
+  onAddVideo: (file: File) => void
   onRemove: (id: string) => void
   maxPhotos?: number
   maxVideos?: number
@@ -23,7 +21,6 @@ interface MediaUploaderProps {
 }
 
 export function MediaUploader({
-  category,
   photos,
   videos,
   onAddPhoto,
@@ -36,47 +33,32 @@ export function MediaUploader({
   const photoInputRef = useRef<HTMLInputElement>(null)
   const videoInputRef = useRef<HTMLInputElement>(null)
 
-  const categoryPhotos = useMemo(
-    () => photos.filter((p) => p.category === category),
-    [photos, category]
-  )
-  const categoryVideos = useMemo(
-    () => videos.filter((v) => v.category === category),
-    [videos, category]
-  )
-
-  const canAddPhoto = categoryPhotos.length < maxPhotos
-  const canAddVideo = categoryVideos.length < maxVideos
+  const canAddPhoto = photos.length < maxPhotos
+  const canAddVideo = videos.length < maxVideos
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) onAddPhoto(category, file)
+    if (file) onAddPhoto(file)
     e.target.value = ''
   }
 
   const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) onAddVideo(category, file)
+    if (file) onAddVideo(file)
     e.target.value = ''
   }
 
   return (
     <div className={cn('space-y-3', className)}>
-      <div className="flex items-center justify-between">
-        <span className="text-[13px] font-medium text-muted-foreground">
-          {category === 'before' ? 'Before' : 'After'}
-        </span>
-      </div>
-
       {/* Photo row */}
       <div>
         <div className="mb-1.5 flex items-center gap-2">
           <span className="text-[11px] text-muted-foreground/60">
-            写真 {categoryPhotos.length}/{maxPhotos}
+            写真 {photos.length}/{maxPhotos}
           </span>
         </div>
         <div className="flex gap-2 overflow-x-auto pb-1">
-          {categoryPhotos.map((item) => (
+          {photos.map((item) => (
             <div key={item.id} className="relative shrink-0">
               <img
                 src={item.previewUrl}
@@ -122,11 +104,11 @@ export function MediaUploader({
       <div>
         <div className="mb-1.5 flex items-center gap-2">
           <span className="text-[11px] text-muted-foreground/60">
-            動画 {categoryVideos.length}/{maxVideos}
+            動画 {videos.length}/{maxVideos}
           </span>
         </div>
         <div className="flex gap-2 overflow-x-auto pb-1">
-          {categoryVideos.map((item) => (
+          {videos.map((item) => (
             <div key={item.id} className="relative shrink-0">
               <video
                 src={item.previewUrl}

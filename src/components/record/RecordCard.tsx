@@ -1,31 +1,25 @@
 import { useNavigate } from 'react-router-dom'
-import type { TreatmentRecord, RecordMedia } from '@/types'
+import type { TreatmentRecord } from '@/types'
 import { getImageUrl, getMediaUrl } from '@/lib/api'
 import { formatDate } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 
 interface RecordCardProps {
   record: TreatmentRecord
-  media?: RecordMedia[]
   className?: string
 }
 
-export function RecordCard({ record, media, className }: RecordCardProps) {
+export function RecordCard({ record, className }: RecordCardProps) {
   const navigate = useNavigate()
 
-  // New media: show first before + first after photo thumbnails
-  const beforePhoto = media?.find((m) => m.category === 'before' && m.media_type === 'photo')
-  const afterPhoto = media?.find((m) => m.category === 'after' && m.media_type === 'photo')
-  const hasNewMedia = beforePhoto || afterPhoto
-
-  // Legacy fallback
-  const beforeUrl = hasNewMedia
-    ? (beforePhoto ? getMediaUrl(beforePhoto.storage_key) : '')
+  // New media: use joined storage_key from representative media
+  const beforeUrl = record.before_media_storage_key
+    ? getMediaUrl(record.before_media_storage_key)
     : getImageUrl(record.before_image_key)
-  const afterUrl = hasNewMedia
-    ? (afterPhoto ? getMediaUrl(afterPhoto.storage_key) : '')
+  const afterUrl = record.after_media_storage_key
+    ? getMediaUrl(record.after_media_storage_key)
     : getImageUrl(record.after_image_key)
-  const hasImages = beforeUrl || afterUrl || record.before_image_key || record.after_image_key
+  const hasImages = beforeUrl || afterUrl
 
   return (
     <button

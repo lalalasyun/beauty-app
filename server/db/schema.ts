@@ -86,9 +86,14 @@ export function deleteCustomer(db: D1Database, id: string) {
 export function listRecords(db: D1Database, customerId: string) {
   return db
     .prepare(
-      `SELECT * FROM treatment_records
-       WHERE customer_id = ?1
-       ORDER BY treatment_date DESC, created_at DESC`
+      `SELECT tr.*,
+         COALESCE(bm.storage_key, '') as before_media_storage_key,
+         COALESCE(am.storage_key, '') as after_media_storage_key
+       FROM treatment_records tr
+       LEFT JOIN record_media bm ON bm.id = tr.before_media_id
+       LEFT JOIN record_media am ON am.id = tr.after_media_id
+       WHERE tr.customer_id = ?1
+       ORDER BY tr.treatment_date DESC, tr.created_at DESC`
     )
     .bind(customerId)
 }
@@ -152,6 +157,34 @@ export function deleteRecord(db: D1Database, id: string) {
     .bind(id)
 }
 
+export function updateRecordRepresentative(
+  db: D1Database,
+  id: string,
+  field: 'before_media_id' | 'after_media_id',
+  mediaId: string
+) {
+  const sql =
+    field === 'before_media_id'
+      ? `UPDATE treatment_records SET before_media_id = ?2, updated_at = datetime('now') WHERE id = ?1`
+      : `UPDATE treatment_records SET after_media_id = ?2, updated_at = datetime('now') WHERE id = ?1`
+  return db.prepare(sql).bind(id, mediaId)
+}
+
+export function clearRepresentativeByMediaId(
+  db: D1Database,
+  mediaId: string
+) {
+  return db
+    .prepare(
+      `UPDATE treatment_records
+       SET before_media_id = CASE WHEN before_media_id = ?1 THEN '' ELSE before_media_id END,
+           after_media_id = CASE WHEN after_media_id = ?1 THEN '' ELSE after_media_id END,
+           updated_at = datetime('now')
+       WHERE before_media_id = ?1 OR after_media_id = ?1`
+    )
+    .bind(mediaId)
+}
+
 // ============================================================
 // Record Media
 // ============================================================
@@ -161,7 +194,7 @@ export function listMediaByRecord(db: D1Database, recordId: string) {
     .prepare(
       `SELECT * FROM record_media
        WHERE record_id = ?1
-       ORDER BY category, sort_order`
+       ORDER BY sort_order, created_at`
     )
     .bind(recordId)
 }
@@ -171,7 +204,6 @@ export function insertMedia(
   id: string,
   recordId: string,
   mediaType: string,
-  category: string,
   sortOrder: number,
   storageKey: string,
   fileSize: number,
@@ -179,10 +211,10 @@ export function insertMedia(
 ) {
   return db
     .prepare(
-      `INSERT INTO record_media (id, record_id, media_type, category, sort_order, storage_key, file_size, mime_type)
-       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)`
+      `INSERT INTO record_media (id, record_id, media_type, sort_order, storage_key, file_size, mime_type)
+       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)`
     )
-    .bind(id, recordId, mediaType, category, sortOrder, storageKey, fileSize, mimeType)
+    .bind(id, recordId, mediaType, sortOrder, storageKey, fileSize, mimeType)
 }
 
 export function deleteMedia(db: D1Database, id: string) {

@@ -6,6 +6,9 @@ import {
   deleteMedia,
   getMedia,
   countMediaByRecord,
+  getRecord,
+  updateRecordRepresentative,
+  clearRepresentativeByMediaId,
 } from '../db/schema.ts'
 
 const MAX_PHOTOS = 5
@@ -23,26 +26,21 @@ mediaRoute.post('/upload', async (c) => {
     const body = await c.req.parseBody()
     const recordId = body['record_id']
     const mediaType = body['media_type']
-    const category = body['category']
     const file = body['file']
 
     if (
       typeof recordId !== 'string' || !recordId ||
       typeof mediaType !== 'string' || !mediaType ||
-      typeof category !== 'string' || !category ||
       !file || typeof file === 'string'
     ) {
       return c.json(
-        { success: false, error: 'record_id, media_type, category, and file are required' },
+        { success: false, error: 'record_id, media_type, and file are required' },
         400
       )
     }
 
     if (mediaType !== 'photo' && mediaType !== 'video') {
       return c.json({ success: false, error: 'media_type must be "photo" or "video"' }, 400)
-    }
-    if (category !== 'before' && category !== 'after') {
-      return c.json({ success: false, error: 'category must be "before" or "after"' }, 400)
     }
 
     // Size check
@@ -84,7 +82,6 @@ mediaRoute.post('/upload', async (c) => {
       id,
       recordId,
       mediaType,
-      category,
       currentCount,
       storageKey,
       file.size,
@@ -97,7 +94,6 @@ mediaRoute.post('/upload', async (c) => {
         id,
         record_id: recordId,
         media_type: mediaType,
-        category,
         sort_order: currentCount,
         storage_key: storageKey,
         file_size: file.size,
@@ -125,7 +121,58 @@ mediaRoute.get('/:recordId', async (c) => {
 })
 
 // ============================================================
-// DELETE /api/media/:id
+// PUT /api/media/:recordId/representative
+// ============================================================
+mediaRoute.put('/:recordId/representative', async (c) => {
+  const recordId = c.req.param('recordId')
+  try {
+    const body = await c.req.json<{
+      field: string
+      media_id: string
+    }>()
+
+    if (body.field !== 'before_media_id' && body.field !== 'after_media_id') {
+      return c.json(
+        { success: false, error: 'field must be "before_media_id" or "after_media_id"' },
+        400
+      )
+    }
+
+    const record = await getRecord(c.env.DB, recordId).first()
+    if (!record) {
+      return c.json({ success: false, error: 'Record not found' }, 404)
+    }
+
+    // 空文字で解除
+    if (body.media_id === '') {
+      await updateRecordRepresentative(c.env.DB, recordId, body.field, '').run()
+      return c.json({ success: true, data: { field: body.field, media_id: '' } })
+    }
+
+    // メディアの存在確認
+    const media = await getMedia(c.env.DB, body.media_id).first() as Record<string, unknown> | null
+    if (!media) {
+      return c.json({ success: false, error: 'Media not found' }, 404)
+    }
+
+    // 写真のみ設定可能
+    if (media.media_type !== 'photo') {
+      return c.json(
+        { success: false, error: '代表写真には写真のみ設定可能です' },
+        400
+      )
+    }
+
+    await updateRecordRepresentative(c.env.DB, recordId, body.field, body.media_id).run()
+    return c.json({ success: true, data: { field: body.field, media_id: body.media_id } })
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error'
+    return c.json({ success: false, error: message }, 500)
+  }
+})
+
+// ============================================================
+// DELETE /api/media/:id/delete
 // ============================================================
 mediaRoute.delete('/:id/delete', async (c) => {
   const id = c.req.param('id')
@@ -140,6 +187,9 @@ mediaRoute.delete('/:id/delete', async (c) => {
     if (storageKey) {
       await c.env.BUCKET.delete(storageKey)
     }
+
+    // Clear representative references if this media was set as one
+    await clearRepresentativeByMediaId(c.env.DB, id).run()
 
     // Delete from DB
     await deleteMedia(c.env.DB, id).run()

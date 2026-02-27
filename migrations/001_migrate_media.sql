@@ -1,15 +1,14 @@
 -- ============================================================
--- record_media テーブル作成 + 既存データ移行
+-- record_media テーブル再構築 + treatment_records に代表メディアID追加
 -- ============================================================
--- 既存の before_image_key / after_image_key を record_media に移行する。
--- 元カラムはそのまま残して後方互換性を維持。
+-- category カラムを削除し、代わりに treatment_records 側で
+-- before_media_id / after_media_id として代表写真を管理する。
 
--- 1. テーブル作成
+-- 1. record_media テーブル作成（category なし）
 CREATE TABLE IF NOT EXISTS record_media (
   id TEXT PRIMARY KEY,
   record_id TEXT NOT NULL,
   media_type TEXT NOT NULL CHECK(media_type IN ('photo', 'video')),
-  category TEXT NOT NULL DEFAULT 'before' CHECK(category IN ('before', 'after')),
   sort_order INTEGER NOT NULL DEFAULT 0,
   storage_key TEXT NOT NULL,
   file_size INTEGER NOT NULL DEFAULT 0,
@@ -19,27 +18,29 @@ CREATE TABLE IF NOT EXISTS record_media (
 );
 CREATE INDEX IF NOT EXISTS idx_media_record ON record_media(record_id, sort_order);
 
--- 2. 既存 before_image_key を移行
-INSERT OR IGNORE INTO record_media (id, record_id, media_type, category, sort_order, storage_key, mime_type)
+-- 2. treatment_records に代表メディアID カラムを追加
+ALTER TABLE treatment_records ADD COLUMN before_media_id TEXT DEFAULT '';
+ALTER TABLE treatment_records ADD COLUMN after_media_id TEXT DEFAULT '';
+
+-- 3. 既存 before_image_key を record_media に移行
+INSERT OR IGNORE INTO record_media (id, record_id, media_type, sort_order, storage_key, mime_type)
 SELECT
   lower(hex(randomblob(16))),
   id,
   'photo',
-  'before',
   0,
   before_image_key,
   'image/webp'
 FROM treatment_records
 WHERE before_image_key IS NOT NULL AND before_image_key != '';
 
--- 3. 既存 after_image_key を移行
-INSERT OR IGNORE INTO record_media (id, record_id, media_type, category, sort_order, storage_key, mime_type)
+-- 4. 既存 after_image_key を record_media に移行
+INSERT OR IGNORE INTO record_media (id, record_id, media_type, sort_order, storage_key, mime_type)
 SELECT
   lower(hex(randomblob(16))),
   id,
   'photo',
-  'after',
-  0,
+  1,
   after_image_key,
   'image/webp'
 FROM treatment_records

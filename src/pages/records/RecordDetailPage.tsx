@@ -7,15 +7,15 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Button } from '@/components/ui/button'
 import { useTreatmentRecord } from '@/hooks/useTreatmentRecords'
 import { useRecordMedia } from '@/hooks/useRecordMedia'
-import { getImageUrl } from '@/lib/api'
+import { getImageUrl, getMediaUrl } from '@/lib/api'
 import { formatDate } from '@/lib/utils'
 import * as api from '@/lib/api'
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 
 export function RecordDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { record, loading } = useTreatmentRecord(id)
+  const { record, loading, reload: reloadRecord } = useTreatmentRecord(id)
   const { media } = useRecordMedia(id)
   const [deleting, setDeleting] = useState(false)
 
@@ -30,6 +30,19 @@ export function RecordDetailPage() {
       setDeleting(false)
     }
   }
+
+  const handleSetRepresentative = useCallback(
+    async (field: 'before_media_id' | 'after_media_id', mediaId: string) => {
+      if (!id) return
+      try {
+        await api.setRepresentative(id, field, mediaId)
+        reloadRecord()
+      } catch {
+        // エラーハンドリング（将来Toast追加）
+      }
+    },
+    [id, reloadRecord]
+  )
 
   if (loading) {
     return (
@@ -59,10 +72,21 @@ export function RecordDetailPage() {
     )
   }
 
-  const hasLegacyImages = record.before_image_key || record.after_image_key
-  const hasNewMedia = media.length > 0
-  const beforeUrl = getImageUrl(record.before_image_key)
-  const afterUrl = getImageUrl(record.after_image_key)
+  // Resolve before/after representative URLs
+  // Priority: before_media_id → legacy before_image_key
+  const beforeMediaItem = record.before_media_id
+    ? media.find((m) => m.id === record.before_media_id)
+    : null
+  const afterMediaItem = record.after_media_id
+    ? media.find((m) => m.id === record.after_media_id)
+    : null
+
+  const beforeUrl = beforeMediaItem
+    ? getMediaUrl(beforeMediaItem.storage_key)
+    : getImageUrl(record.before_image_key)
+  const afterUrl = afterMediaItem
+    ? getMediaUrl(afterMediaItem.storage_key)
+    : getImageUrl(record.after_image_key)
 
   return (
     <>
@@ -81,12 +105,18 @@ export function RecordDetailPage() {
         }
       />
       <PageContainer className="pt-5">
-        {/* New media gallery (takes priority) */}
-        {hasNewMedia && <MediaGallery media={media} />}
+        {/* Before/After representative photos */}
+        <BeforeAfterView beforeUrl={beforeUrl} afterUrl={afterUrl} />
 
-        {/* Legacy before/after photos (fallback) */}
-        {!hasNewMedia && hasLegacyImages && (
-          <BeforeAfterView beforeUrl={beforeUrl} afterUrl={afterUrl} />
+        {/* Flat media gallery */}
+        {media.length > 0 && (
+          <MediaGallery
+            media={media}
+            beforeMediaId={record.before_media_id}
+            afterMediaId={record.after_media_id}
+            onSetRepresentative={handleSetRepresentative}
+            className="mt-4"
+          />
         )}
 
         {/* Meta */}

@@ -26,10 +26,10 @@ export function RecordNewPage() {
       // 2. メディアを並行アップロード
       const uploads: Promise<unknown>[] = []
       for (const photo of data.photos) {
-        uploads.push(uploadPhoto(record.id, photo.category, photo.file))
+        uploads.push(uploadPhoto(record.id, photo.file))
       }
       for (const video of data.videos) {
-        uploads.push(uploadVideo(record.id, video.category, video.file))
+        uploads.push(uploadVideo(record.id, video.file))
       }
       await Promise.all(uploads)
 

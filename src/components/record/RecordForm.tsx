@@ -39,22 +39,20 @@ export function RecordForm({
   const [photos, setPhotos] = useState<MediaFile[]>([])
   const [videos, setVideos] = useState<MediaFile[]>([])
 
-  const handleAddPhoto = useCallback((category: 'before' | 'after', file: File) => {
+  const handleAddPhoto = useCallback((file: File) => {
     const item: MediaFile = {
       id: genId(),
       file,
-      category,
       mediaType: 'photo',
       previewUrl: URL.createObjectURL(file),
     }
     setPhotos((prev) => [...prev, item])
   }, [])
 
-  const handleAddVideo = useCallback((category: 'before' | 'after', file: File) => {
+  const handleAddVideo = useCallback((file: File) => {
     const item: MediaFile = {
       id: genId(),
       file,
-      category,
       mediaType: 'video',
       previewUrl: URL.createObjectURL(file),
     }
@@ -87,24 +85,13 @@ export function RecordForm({
           <span className="text-[13px] font-medium text-muted-foreground">写真・動画</span>
           <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground/60">任意</span>
         </div>
-        <div className="space-y-4">
-          <MediaUploader
-            category="before"
-            photos={photos}
-            videos={videos}
-            onAddPhoto={handleAddPhoto}
-            onAddVideo={handleAddVideo}
-            onRemove={handleRemove}
-          />
-          <MediaUploader
-            category="after"
-            photos={photos}
-            videos={videos}
-            onAddPhoto={handleAddPhoto}
-            onAddVideo={handleAddVideo}
-            onRemove={handleRemove}
-          />
-        </div>
+        <MediaUploader
+          photos={photos}
+          videos={videos}
+          onAddPhoto={handleAddPhoto}
+          onAddVideo={handleAddVideo}
+          onRemove={handleRemove}
+        />
       </div>
 
       {/* Treatment date */}

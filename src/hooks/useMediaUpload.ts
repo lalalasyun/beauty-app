@@ -6,8 +6,8 @@ import type { RecordMedia } from '@/types'
 interface UseMediaUploadReturn {
   uploading: boolean
   error: string | null
-  uploadPhoto: (recordId: string, category: 'before' | 'after', file: File) => Promise<RecordMedia>
-  uploadVideo: (recordId: string, category: 'before' | 'after', file: File) => Promise<RecordMedia>
+  uploadPhoto: (recordId: string, file: File) => Promise<RecordMedia>
+  uploadVideo: (recordId: string, file: File) => Promise<RecordMedia>
 }
 
 export function useMediaUpload(): UseMediaUploadReturn {
@@ -15,12 +15,12 @@ export function useMediaUpload(): UseMediaUploadReturn {
   const [error, setError] = useState<string | null>(null)
 
   const uploadPhoto = useCallback(
-    async (recordId: string, category: 'before' | 'after', file: File): Promise<RecordMedia> => {
+    async (recordId: string, file: File): Promise<RecordMedia> => {
       setUploading(true)
       setError(null)
       try {
         const compressed = await compressImage(file)
-        return await api.uploadMedia(recordId, 'photo', category, compressed)
+        return await api.uploadMedia(recordId, 'photo', compressed)
       } catch (e) {
         const msg = e instanceof Error ? e.message : 'アップロードに失敗しました'
         setError(msg)
@@ -33,11 +33,11 @@ export function useMediaUpload(): UseMediaUploadReturn {
   )
 
   const uploadVideo = useCallback(
-    async (recordId: string, category: 'before' | 'after', file: File): Promise<RecordMedia> => {
+    async (recordId: string, file: File): Promise<RecordMedia> => {
       setUploading(true)
       setError(null)
       try {
-        return await api.uploadMedia(recordId, 'video', category, file)
+        return await api.uploadMedia(recordId, 'video', file)
       } catch (e) {
         const msg = e instanceof Error ? e.message : 'アップロードに失敗しました'
         setError(msg)

@@ -27,8 +27,13 @@ export interface TreatmentRecord {
   memo: string
   before_image_key: string
   after_image_key: string
+  before_media_id: string
+  after_media_id: string
   created_at: string
   updated_at: string
+  // Joined fields from listRecords
+  before_media_storage_key?: string
+  after_media_storage_key?: string
 }
 
 export type RecordCreate = Pick<
@@ -47,7 +52,6 @@ export interface RecordMedia {
   id: string
   record_id: string
   media_type: 'photo' | 'video'
-  category: 'before' | 'after'
   sort_order: number
   storage_key: string
   file_size: number

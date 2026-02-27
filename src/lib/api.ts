@@ -130,13 +130,11 @@ export async function fetchRecordMedia(recordId: string): Promise<RecordMedia[]>
 export async function uploadMedia(
   recordId: string,
   mediaType: 'photo' | 'video',
-  category: 'before' | 'after',
   file: File
 ): Promise<RecordMedia> {
   const formData = new FormData()
   formData.append('record_id', recordId)
   formData.append('media_type', mediaType)
-  formData.append('category', category)
   formData.append('file', file)
 
   const res = await fetch(`${BASE}/media/upload`, {
@@ -146,6 +144,20 @@ export async function uploadMedia(
   const json = (await res.json()) as ApiResponse<RecordMedia>
   if (!json.success) throw new Error(json.error ?? 'Upload failed')
   return json.data as RecordMedia
+}
+
+export async function setRepresentative(
+  recordId: string,
+  field: 'before_media_id' | 'after_media_id',
+  mediaId: string
+): Promise<{ field: string; media_id: string }> {
+  return request<{ field: string; media_id: string }>(
+    `/media/${recordId}/representative`,
+    {
+      method: 'PUT',
+      body: JSON.stringify({ field, media_id: mediaId }),
+    }
+  )
 }
 
 export async function deleteMedia(id: string): Promise<void> {

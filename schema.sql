@@ -24,17 +24,18 @@ CREATE TABLE IF NOT EXISTS treatment_records (
   memo TEXT DEFAULT '',
   before_image_key TEXT DEFAULT '',
   after_image_key TEXT DEFAULT '',
+  before_media_id TEXT DEFAULT '',
+  after_media_id TEXT DEFAULT '',
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now')),
   FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
 );
 
--- メディアテーブル（写真5枚＋動画5本、Before/After分類あり）
+-- メディアテーブル（写真5枚＋動画5本、フラット管理）
 CREATE TABLE IF NOT EXISTS record_media (
   id TEXT PRIMARY KEY,
   record_id TEXT NOT NULL,
   media_type TEXT NOT NULL CHECK(media_type IN ('photo', 'video')),
-  category TEXT NOT NULL DEFAULT 'before' CHECK(category IN ('before', 'after')),
   sort_order INTEGER NOT NULL DEFAULT 0,
   storage_key TEXT NOT NULL,
   file_size INTEGER NOT NULL DEFAULT 0,
