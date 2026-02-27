@@ -151,3 +151,63 @@ export function deleteRecord(db: D1Database, id: string) {
     .prepare(`DELETE FROM treatment_records WHERE id = ?1`)
     .bind(id)
 }
+
+// ============================================================
+// Record Media
+// ============================================================
+
+export function listMediaByRecord(db: D1Database, recordId: string) {
+  return db
+    .prepare(
+      `SELECT * FROM record_media
+       WHERE record_id = ?1
+       ORDER BY category, sort_order`
+    )
+    .bind(recordId)
+}
+
+export function insertMedia(
+  db: D1Database,
+  id: string,
+  recordId: string,
+  mediaType: string,
+  category: string,
+  sortOrder: number,
+  storageKey: string,
+  fileSize: number,
+  mimeType: string
+) {
+  return db
+    .prepare(
+      `INSERT INTO record_media (id, record_id, media_type, category, sort_order, storage_key, file_size, mime_type)
+       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)`
+    )
+    .bind(id, recordId, mediaType, category, sortOrder, storageKey, fileSize, mimeType)
+}
+
+export function deleteMedia(db: D1Database, id: string) {
+  return db.prepare(`DELETE FROM record_media WHERE id = ?1`).bind(id)
+}
+
+export function getMedia(db: D1Database, id: string) {
+  return db.prepare(`SELECT * FROM record_media WHERE id = ?1`).bind(id)
+}
+
+export function countMediaByRecord(
+  db: D1Database,
+  recordId: string,
+  mediaType: string
+) {
+  return db
+    .prepare(
+      `SELECT COUNT(*) as count FROM record_media
+       WHERE record_id = ?1 AND media_type = ?2`
+    )
+    .bind(recordId, mediaType)
+}
+
+export function deleteMediaByRecord(db: D1Database, recordId: string) {
+  return db
+    .prepare(`DELETE FROM record_media WHERE record_id = ?1`)
+    .bind(recordId)
+}

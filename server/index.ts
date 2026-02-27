@@ -11,6 +11,7 @@ export interface Env {
 import { customersRoute } from './routes/customers.ts'
 import { recordsRoute } from './routes/records.ts'
 import { imagesRoute } from './routes/images.ts'
+import { mediaRoute } from './routes/media.ts'
 
 // ============================================================
 // Hono App
@@ -44,5 +45,6 @@ app.get('/health', (c) => {
 app.route('/customers', customersRoute)
 app.route('/records', recordsRoute)
 app.route('/images', imagesRoute)
+app.route('/media', mediaRoute)
 
 export default app

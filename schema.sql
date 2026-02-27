@@ -29,7 +29,22 @@ CREATE TABLE IF NOT EXISTS treatment_records (
   FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
 );
 
+-- メディアテーブル（写真5枚＋動画5本、Before/After分類あり）
+CREATE TABLE IF NOT EXISTS record_media (
+  id TEXT PRIMARY KEY,
+  record_id TEXT NOT NULL,
+  media_type TEXT NOT NULL CHECK(media_type IN ('photo', 'video')),
+  category TEXT NOT NULL DEFAULT 'before' CHECK(category IN ('before', 'after')),
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  storage_key TEXT NOT NULL,
+  file_size INTEGER NOT NULL DEFAULT 0,
+  mime_type TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (record_id) REFERENCES treatment_records(id) ON DELETE CASCADE
+);
+
 -- インデックス
 CREATE INDEX IF NOT EXISTS idx_customers_name ON customers(name);
 CREATE INDEX IF NOT EXISTS idx_records_customer ON treatment_records(customer_id);
 CREATE INDEX IF NOT EXISTS idx_records_date ON treatment_records(treatment_date DESC);
+CREATE INDEX IF NOT EXISTS idx_media_record ON record_media(record_id, sort_order);

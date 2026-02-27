@@ -41,6 +41,21 @@ export type RecordUpdate = Partial<
 >
 
 // ============================================================
+// メディア（写真・動画）
+// ============================================================
+export interface RecordMedia {
+  id: string
+  record_id: string
+  media_type: 'photo' | 'video'
+  category: 'before' | 'after'
+  sort_order: number
+  storage_key: string
+  file_size: number
+  mime_type: string
+  created_at: string
+}
+
+// ============================================================
 // API レスポンス
 // ============================================================
 export interface ApiResponse<T> {

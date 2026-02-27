@@ -1,20 +1,28 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
-import { PhotoUploader } from './PhotoUploader'
+import { MediaUploader } from './MediaUploader'
+import type { MediaFile } from './MediaUploader'
 import { todayString } from '@/lib/utils'
 import { cn } from '@/lib/utils'
+
+export interface RecordFormData {
+  treatment_date: string
+  memo: string
+  photos: MediaFile[]
+  videos: MediaFile[]
+}
 
 interface RecordFormProps {
   initialDate?: string
   initialMemo?: string
-  onSubmit: (data: {
-    treatment_date: string
-    memo: string
-    beforeFile: File | null
-    afterFile: File | null
-  }) => Promise<void>
+  onSubmit: (data: RecordFormData) => Promise<void>
   submitLabel?: string
   loading?: boolean
+}
+
+let nextId = 0
+function genId() {
+  return `local-${++nextId}-${Date.now()}`
 }
 
 export function RecordForm({
@@ -28,28 +36,75 @@ export function RecordForm({
     initialDate ?? todayString()
   )
   const [memo, setMemo] = useState(initialMemo)
-  const [beforeFile, setBeforeFile] = useState<File | null>(null)
-  const [afterFile, setAfterFile] = useState<File | null>(null)
+  const [photos, setPhotos] = useState<MediaFile[]>([])
+  const [videos, setVideos] = useState<MediaFile[]>([])
+
+  const handleAddPhoto = useCallback((category: 'before' | 'after', file: File) => {
+    const item: MediaFile = {
+      id: genId(),
+      file,
+      category,
+      mediaType: 'photo',
+      previewUrl: URL.createObjectURL(file),
+    }
+    setPhotos((prev) => [...prev, item])
+  }, [])
+
+  const handleAddVideo = useCallback((category: 'before' | 'after', file: File) => {
+    const item: MediaFile = {
+      id: genId(),
+      file,
+      category,
+      mediaType: 'video',
+      previewUrl: URL.createObjectURL(file),
+    }
+    setVideos((prev) => [...prev, item])
+  }, [])
+
+  const handleRemove = useCallback((id: string) => {
+    setPhotos((prev) => {
+      const item = prev.find((p) => p.id === id)
+      if (item) URL.revokeObjectURL(item.previewUrl)
+      return prev.filter((p) => p.id !== id)
+    })
+    setVideos((prev) => {
+      const item = prev.find((v) => v.id === id)
+      if (item) URL.revokeObjectURL(item.previewUrl)
+      return prev.filter((v) => v.id !== id)
+    })
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    await onSubmit({ treatment_date: treatmentDate, memo, beforeFile, afterFile })
+    await onSubmit({ treatment_date: treatmentDate, memo, photos, videos })
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Photos */}
-      <div className="grid grid-cols-2 gap-3">
-        <PhotoUploader
-          label="Before"
-          file={beforeFile}
-          onChange={setBeforeFile}
-        />
-        <PhotoUploader
-          label="After"
-          file={afterFile}
-          onChange={setAfterFile}
-        />
+      {/* Media */}
+      <div>
+        <div className="mb-3 flex items-center gap-2">
+          <span className="text-[13px] font-medium text-muted-foreground">写真・動画</span>
+          <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground/60">任意</span>
+        </div>
+        <div className="space-y-4">
+          <MediaUploader
+            category="before"
+            photos={photos}
+            videos={videos}
+            onAddPhoto={handleAddPhoto}
+            onAddVideo={handleAddVideo}
+            onRemove={handleRemove}
+          />
+          <MediaUploader
+            category="after"
+            photos={photos}
+            videos={videos}
+            onAddPhoto={handleAddPhoto}
+            onAddVideo={handleAddVideo}
+            onRemove={handleRemove}
+          />
+        </div>
       </div>
 
       {/* Treatment date */}

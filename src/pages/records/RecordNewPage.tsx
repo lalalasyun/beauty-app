@@ -2,21 +2,17 @@ import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Header, PageContainer } from '@/components/layout'
 import { RecordForm } from '@/components/record'
+import type { RecordFormData } from '@/components/record/RecordForm'
 import * as api from '@/lib/api'
-import { useImageUpload } from '@/hooks/useImageUpload'
+import { useMediaUpload } from '@/hooks/useMediaUpload'
 
 export function RecordNewPage() {
   const { id: customerId } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { upload } = useImageUpload()
+  const { uploadPhoto, uploadVideo } = useMediaUpload()
   const [loading, setLoading] = useState(false)
 
-  const handleSubmit = async (data: {
-    treatment_date: string
-    memo: string
-    beforeFile: File | null
-    afterFile: File | null
-  }) => {
+  const handleSubmit = async (data: RecordFormData) => {
     if (!customerId) return
     setLoading(true)
     try {
@@ -27,13 +23,13 @@ export function RecordNewPage() {
         memo: data.memo,
       })
 
-      // 2. 画像アップロード（並行実行）
-      const uploads: Promise<string>[] = []
-      if (data.beforeFile) {
-        uploads.push(upload(record.id, 'before', data.beforeFile))
+      // 2. メディアを並行アップロード
+      const uploads: Promise<unknown>[] = []
+      for (const photo of data.photos) {
+        uploads.push(uploadPhoto(record.id, photo.category, photo.file))
       }
-      if (data.afterFile) {
-        uploads.push(upload(record.id, 'after', data.afterFile))
+      for (const video of data.videos) {
+        uploads.push(uploadVideo(record.id, video.category, video.file))
       }
       await Promise.all(uploads)
 

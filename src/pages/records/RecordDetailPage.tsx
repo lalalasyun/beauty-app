@@ -1,11 +1,12 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { Trash2, Camera } from 'lucide-react'
 import { Header, PageContainer } from '@/components/layout'
-import { BeforeAfterView } from '@/components/record'
+import { BeforeAfterView, MediaGallery } from '@/components/record'
 import { EmptyState } from '@/components/ui/empty-state'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Button } from '@/components/ui/button'
 import { useTreatmentRecord } from '@/hooks/useTreatmentRecords'
+import { useRecordMedia } from '@/hooks/useRecordMedia'
 import { getImageUrl } from '@/lib/api'
 import { formatDate } from '@/lib/utils'
 import * as api from '@/lib/api'
@@ -15,11 +16,12 @@ export function RecordDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { record, loading } = useTreatmentRecord(id)
+  const { media } = useRecordMedia(id)
   const [deleting, setDeleting] = useState(false)
 
   const handleDelete = async () => {
     if (!id || !record) return
-    if (!confirm('この施術記録を削除しますか？\n写真も一緒に削除されます。')) return
+    if (!confirm('この施術記録を削除しますか？\n写真・動画も一緒に削除されます。')) return
     setDeleting(true)
     try {
       await api.deleteRecord(id)
@@ -57,6 +59,8 @@ export function RecordDetailPage() {
     )
   }
 
+  const hasLegacyImages = record.before_image_key || record.after_image_key
+  const hasNewMedia = media.length > 0
   const beforeUrl = getImageUrl(record.before_image_key)
   const afterUrl = getImageUrl(record.after_image_key)
 
@@ -77,8 +81,13 @@ export function RecordDetailPage() {
         }
       />
       <PageContainer className="pt-5">
-        {/* Before/After Photos */}
-        <BeforeAfterView beforeUrl={beforeUrl} afterUrl={afterUrl} />
+        {/* New media gallery (takes priority) */}
+        {hasNewMedia && <MediaGallery media={media} />}
+
+        {/* Legacy before/after photos (fallback) */}
+        {!hasNewMedia && hasLegacyImages && (
+          <BeforeAfterView beforeUrl={beforeUrl} afterUrl={afterUrl} />
+        )}
 
         {/* Meta */}
         <div className="mt-5 space-y-4 rounded-2xl bg-muted/30 px-5 py-4">

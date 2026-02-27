@@ -6,6 +6,8 @@ import {
   insertRecord,
   updateRecord,
   deleteRecord,
+  listMediaByRecord,
+  deleteMediaByRecord,
 } from '../db/schema.ts'
 
 export const recordsRoute = new Hono<HonoEnv>()
@@ -127,14 +129,23 @@ recordsRoute.delete('/:id', async (c) => {
       return c.json({ success: false, error: 'Record not found' }, 404)
     }
 
-    // R2 から画像も削除
+    // R2 からレガシー画像を削除
     const beforeKey = existing.before_image_key as string
     const afterKey = existing.after_image_key as string
     const deletePromises: Promise<void>[] = []
     if (beforeKey) deletePromises.push(c.env.BUCKET.delete(beforeKey))
     if (afterKey) deletePromises.push(c.env.BUCKET.delete(afterKey))
+
+    // R2 から新メディアファイルも削除
+    const { results: mediaItems } = await listMediaByRecord(c.env.DB, id).all()
+    for (const item of mediaItems) {
+      const key = (item as Record<string, unknown>).storage_key as string
+      if (key) deletePromises.push(c.env.BUCKET.delete(key))
+    }
     await Promise.all(deletePromises)
 
+    // DB から新メディアレコードを削除（CASCADE で消えるが明示的に）
+    await deleteMediaByRecord(c.env.DB, id).run()
     await deleteRecord(c.env.DB, id).run()
     return c.json({ success: true, data: { id } })
   } catch (e) {

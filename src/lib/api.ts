@@ -1,4 +1,4 @@
-import type { ApiResponse, Customer, CustomerWithStats, TreatmentRecord } from '@/types'
+import type { ApiResponse, Customer, CustomerWithStats, TreatmentRecord, RecordMedia } from '@/types'
 
 const BASE = '/api'
 
@@ -117,4 +117,42 @@ export async function uploadImage(
 export function getImageUrl(key: string): string {
   if (!key) return ''
   return `${BASE}/images/${key}`
+}
+
+// ============================================================
+// Media (multi-photo/video)
+// ============================================================
+
+export async function fetchRecordMedia(recordId: string): Promise<RecordMedia[]> {
+  return request<RecordMedia[]>(`/media/${recordId}`)
+}
+
+export async function uploadMedia(
+  recordId: string,
+  mediaType: 'photo' | 'video',
+  category: 'before' | 'after',
+  file: File
+): Promise<RecordMedia> {
+  const formData = new FormData()
+  formData.append('record_id', recordId)
+  formData.append('media_type', mediaType)
+  formData.append('category', category)
+  formData.append('file', file)
+
+  const res = await fetch(`${BASE}/media/upload`, {
+    method: 'POST',
+    body: formData,
+  })
+  const json = (await res.json()) as ApiResponse<RecordMedia>
+  if (!json.success) throw new Error(json.error ?? 'Upload failed')
+  return json.data as RecordMedia
+}
+
+export async function deleteMedia(id: string): Promise<void> {
+  await request(`/media/${id}/delete`, { method: 'DELETE' })
+}
+
+export function getMediaUrl(storageKey: string): string {
+  if (!storageKey) return ''
+  return `${BASE}/images/${storageKey}`
 }

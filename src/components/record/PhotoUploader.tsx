@@ -50,7 +50,6 @@ export function PhotoUploader({
         ref={inputRef}
         type="file"
         accept="image/*"
-        capture="environment"
         onChange={handleChange}
         className="hidden"
       />
@@ -112,10 +111,10 @@ export function PhotoUploader({
           </div>
           <div className="text-center">
             <p className="text-[13px] font-medium text-muted-foreground/70">
-              タップして撮影
+              写真を追加
             </p>
             <p className="mt-0.5 text-[11px] text-muted-foreground/40">
-              またはギャラリーから選択
+              撮影またはギャラリーから選択
             </p>
           </div>
         </button>
